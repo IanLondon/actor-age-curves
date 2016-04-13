@@ -1,20 +1,19 @@
 # Ian London 2016
 # ianlondon.github.io
 #
-# A library for extracting HTML tables to pandas dataframes
+# A library for extracting HTML elems to pandas dataframes
 
 from lxml import html
 from lxml.etree import tostring as html_to_string
 import requests
 import pandas as pd
-from collections import Sequence
 
 def to_sequence(x):
     """
     Makes sure an object is a sequence and if it's not, return a 1-tuple containing that object.
     Useful if you want to take an argument which might be one element and might be a list or tuple
     """
-    if isinstance(x, Sequence):
+    if isinstance(x, list) or isinstance(x, tuple):
         return x
     return (x,)
 
@@ -33,9 +32,9 @@ def url_to_tree(url):
     return tree
 
 
-def df_from_tables(table_els, header=None, skiprows=1):
+def dfs_from_tables(table_els, header=None, skiprows=1):
     """
-    From a single lxml.html.HtmlElement <table> or a sequence of them,
+    From a single lxml.html.Htmltableent <table> or a sequence of them,
     convert to pandas DataFrame and optionally skip rows and set the header.
     """
 
@@ -58,22 +57,25 @@ def df_from_tables(table_els, header=None, skiprows=1):
     return dfs
 
 
-def scrape_tables(urls, table_xpath, table_index=0, header=None):
-    tables = []
+def scrape_elems(urls, elem_xpath, elem_index=0, header=None):
+    final_elems = []
 
     urls = to_sequence(urls)
 
     for url in urls:
         tree = url_to_tree(url)
 
-        # select the specified table element
-        all_table_els = tree.xpath(table_xpath)
-        print 'Got %i elements with xpath %s for url %s' % (len(all_table_els), table_xpath, url)
-        table_el = all_table_els[table_index]
+        # select the specified elem element
+        all_elems = tree.xpath(elem_xpath)
+        print 'Got %i elements with xpath %s for url %s' % (len(all_elems), elem_xpath, url)
 
-        tables.append(table_el)
+        if elem_index is not None:
+            print 'selected the %ith' % elem_index
+            elem_el = all_elems[elem_index]
 
-    return tables
+        final_elems.append(elem_el)
+
+    return final_elems
 
 
 def combine_df_rows(dfs, ignore_index):
@@ -103,9 +105,9 @@ if __name__ == "__main__":
     urls = paginate_url(
         'http://www.boxofficemojo.com/people/?view=Actor&pagenum={pagenum}&sort=sumgross&order=DESC&&p=.htm', 3)
 
-    tables = scrape_tables(urls, '//table//table', table_index=0)
+    elems = scrape_elems(urls, '//elem//elem', elem_index=0)
 
-    dfs = df_from_tables(tables,
+    dfs = dfs_from_elems(elems,
         header=['rank','actor','total_gross','no_movies','avg_gross','top_picture','top_gross'])
 
     actor_gross = combine_df_rows(dfs, ignore_index=True)
