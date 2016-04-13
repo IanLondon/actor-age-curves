@@ -99,10 +99,7 @@ def paginate_url(pageable_url, pages):
 
 
 if __name__ == "__main__":
-    # actor_gross = scrape_dfs_across_pages(
-    #     pageable_url='http://www.boxofficemojo.com/people/?view=Actor&pagenum={pagenum}&sort=sumgross&order=DESC&&p=.htm',
-    #     pages=16-14, table_xpath='//table//table', table_index=0, header=['rank','actor','total_gross','no_movies','avg_gross','top_picture','top_gross'])
-
+# Example
     urls = paginate_url(
         'http://www.boxofficemojo.com/people/?view=Actor&pagenum={pagenum}&sort=sumgross&order=DESC&&p=.htm', 3)
 
