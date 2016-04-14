@@ -7,6 +7,8 @@ from lxml import html
 from lxml.etree import tostring as html_to_string
 import requests
 import pandas as pd
+import urlparse
+import logging
 
 def to_sequence(x):
     """
@@ -21,11 +23,11 @@ def url_to_tree(url):
     try:
         page = requests.get(url)
     except requests.ConnectionError as e:
-        print 'Could not connect to url {url}: {e}'.format(url=url,e=e)
+        logging.error('Could not connect to url {url}: {e}'.format(url=url,e=e))
         return
 
     if page.status_code != 200:
-        print '{res}: could not get url {url}'.format(res=page.response, url=url)
+        logging.error('{res}: could not get url {url}'.format(res=page.response, url=url))
         return
 
     tree = html.fromstring(page.content)
@@ -67,10 +69,10 @@ def scrape_elems(urls, elem_xpath, elem_index=0, header=None):
 
         # select the specified elem element
         all_elems = tree.xpath(elem_xpath)
-        print 'Got %i elements with xpath %s for url %s' % (len(all_elems), elem_xpath, url)
+        logging.info('Got %i elements with xpath %s for url %s' % (len(all_elems), elem_xpath, url))
 
         if elem_index is not None:
-            print 'selected the %ith' % elem_index
+            logging.info('selected the %ith' % elem_index)
             elem_el = all_elems[elem_index]
 
         final_elems.append(elem_el)
@@ -99,6 +101,14 @@ def paginate_url(pageable_url, pages):
     paged_urls = [pageable_url.format(pagenum=pagenum) for pagenum in pages]
     return paged_urls
 
+def url_params(url):
+    """
+    Shorthand to get parameters from a URL
+    >>> url_params('http://www.boxofficemojo.com/people/chart/?view=Actor&id=paulbettany.htm')
+    {'id': ['paulbettany.htm'], 'view': ['Actor']}
+    Watch out, the parameters are often a 1-element list.
+    """
+    return urlparse.parse_qs(urlparse.urlparse(url).query)
 
 if __name__ == "__main__":
 # Example
