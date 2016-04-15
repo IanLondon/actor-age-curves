@@ -1,4 +1,7 @@
 data/*
+*.log
+*.pickle
+*.dill
 .ipynb_checkpoints
 *.py[co]
 *.swp
