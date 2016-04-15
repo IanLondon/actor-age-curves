@@ -81,7 +81,7 @@ def dfs_from_tables(table_els, header=None, skiprows=1):
     return dfs
 
 
-def scrape_multi_elems(keyed_urls, scrape_dict):
+def scrape_multi_elems(keyed_urls, scrape_dict, keep_trees=False):
     """
     Arguments:
         url_label: a dict containing URL strings keyed by your url labels, eg:
@@ -90,9 +90,12 @@ def scrape_multi_elems(keyed_urls, scrape_dict):
         scrape_dict: a dict containing xpaths keyed by your element labels. eg:
             {'calories':'xpath_selector1', 'fiber':'xpath_selector2', ...}
 
+        keep_trees: if True, a special key 'tree' will be created in final_results
+            containing the lxml.html Tree of the scraped page
+
     Returns:
         final_results: a dict of dicts. The first key corresponds to the url label
-        and the second key corresponds to the element label.
+        and the second key corresponds to the element label. ('tree' is a special key)
 
         Example -- from the banana page, get the 0th 'calories' element:
             final_results['banana']['calories'][0]
@@ -104,20 +107,29 @@ def scrape_multi_elems(keyed_urls, scrape_dict):
         'txt': ['Example Domain']}}
 
     """
-    final_results = {}
-    page_results = {}
+    if 'tree' in scrape_dict.keys():
+        raise ValueError("'tree' is a reserved keyword")
 
-    logger.info('Beginning new multi-scrape of %i urls' % len(keyed_urls))
+    final_results = {}
+
+    logger.info('Beginning new multiscrape of %i urls' % len(keyed_urls))
 
     for url_label, url in keyed_urls.iteritems():
         tree = url_to_tree(url)
+        page_results = {}
 
+        # add the tree if keep_trees enabled
+        if keep_trees:
+            page_results['tree'] = tree
+
+        # scrape each xpath in the page
         for el_label, xpath in scrape_dict.iteritems():
             all_elems = tree.xpath(xpath)
             logger.info('multiscrape got %i elements with xpath %s for url %s' % (len(all_elems), xpath, url))
 
             page_results[el_label] = all_elems
 
+        # finally, add the page results to the final results, keyed by the url_label
         final_results[url_label] = page_results
 
     return final_results
